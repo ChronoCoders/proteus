@@ -1,0 +1,29 @@
+[package]
+name = "proteus-engine"
+version = "0.2.0"
+edition = "2021"
+authors = ["ChronoCoders <altug@bytus.io>"]
+description = "Advanced zero-day static analysis engine built with Rust and Python"
+readme = "README.md"
+repository = "https://github.com/ChronoCoders/proteus"
+license = "MIT"
+keywords = ["malware", "analysis", "static-analysis", "security", "engine"]
+categories = ["science", "command-line-utilities"]
+
+[lib]
+name = "proteus"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+goblin = "0.8"
+sha2 = "0.10"
+md5 = "0.7"
+hex = "0.4"
+pyo3 = { version = "0.24", features = ["extension-module"] }
+rayon = "1.10"
+memmap2 = "0.9"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

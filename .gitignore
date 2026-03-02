@@ -1,0 +1,89 @@
+# Rust
+/target
+Cargo.lock
+*.exe
+*.dll
+*.dylib
+*.so
+**/*.rs.bk
+
+# Python
+/venv
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.whl
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Datasets & Samples (CRITICAL - DO NOT COMMIT MALWARE)
+test_dataset/
+dataset/
+samples/
+*.malware
+*.mal
+*.infected
+
+# Results & Logs
+metadata.json
+results*.json
+output*.json
+logs*.txt
+test_*.txt
+
+# Models (Large files - use Git LFS if needed)
+models/*.pkl
+models/*.joblib
+models/*.h5
+models/*.pt
+
+# Secrets (CRITICAL)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.crt
+secrets/
+credentials/
+.pypirc
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project specific
+malware_collector.py.bak
+api_keys.txt
+passwords.txt

@@ -1,0 +1,22 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    qemu-system-x86 \
+    tcpdump \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy analysis scripts
+COPY python/ /app/python/
+COPY yara_rules/ /app/yara_rules/
+
+# Create directories
+RUN mkdir -p /app/samples /app/reports
+
+CMD ["python", "python/sandbox_runner.py"]

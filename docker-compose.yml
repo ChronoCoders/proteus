@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  proteus-sandbox:
+    build: 
+      context: .
+      dockerfile: Dockerfile.sandbox
+    container_name: proteus-sandbox
+    volumes:
+      - ./samples:/app/samples
+      - ./reports:/app/reports
+    environment:
+      - ANALYSIS_TIMEOUT=120
+    networks:
+      - proteus-net
+
+networks:
+  proteus-net:
+    driver: bridge

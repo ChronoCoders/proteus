@@ -1,10 +1,5 @@
 # PROTEUS
 
-![Rust](https://img.shields.io/badge/Rust-1.83+-orange.svg)
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
-![Status](https://img.shields.io/badge/Status-Beta-yellow.svg)
-
 **Advanced zero-day static analysis engine built with Rust and Python**
 
 [Features](#features) • [Quick Start](#quick-start) • [Dashboard](#web-dashboard) • [Documentation](https://github.com/ChronoCoders/proteus/wiki) • [Contributing](#contributing) • [License](#license)

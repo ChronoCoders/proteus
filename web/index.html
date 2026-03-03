@@ -199,17 +199,21 @@
                             </div>
                         </div>
 
-                        <div class="glass card rounded-xl p-6 relative overflow-hidden group">
-                            <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl group-hover:bg-orange-500/20 transition-all"></div>
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Sandbox</p>
-                                    <h3 class="text-2xl font-bold mt-1">{{ stats.sandbox_active ? 'Ready' : 'Disabled' }}</h3>
+                        <!-- Sandbox Status -->
+                        <div class="glass rounded-xl p-6 relative overflow-hidden group">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-orange-500/10 rounded-full group-hover:bg-orange-500/20 transition-all"></div>
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="p-2 bg-orange-500/20 rounded-lg">
+                                    <i data-lucide="box" class="w-6 h-6 text-orange-400"></i>
                                 </div>
-                                <i data-lucide="box" class="w-6 h-6 text-orange-500"></i>
+                                <span :class="['px-2 py-1 rounded text-xs font-bold', stats.sandbox_active ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400']">
+                                    {{ stats.sandbox_active ? 'Online' : 'Disabled' }}
+                                </span>
                             </div>
-                            <div class="text-xs text-slate-500">
-                                Dynamic analysis environment
+                            <h3 class="text-slate-400 text-sm font-medium">Sandbox</h3>
+                            <div class="flex items-baseline gap-2 mt-1">
+                                <span class="text-2xl font-bold">Local</span>
+                                <span class="text-xs text-slate-500">Docker</span>
                             </div>
                         </div>
 

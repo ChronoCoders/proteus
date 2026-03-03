@@ -1,7 +1,6 @@
 import proteus
 from pathlib import Path
 from typing import List, Dict, Optional
-from python.cuckoo_sandbox import CuckooSandbox
 from python.archive_handler import analyze_any_file
 
 
@@ -15,8 +14,6 @@ class ProteusAnalyzer:
         self.threshold = 25.0  # Lower threshold prioritizes catching all malware over false positives
         self.cuckoo_enabled = cuckoo_enabled
         self.cuckoo = None
-        if cuckoo_enabled:
-            self.cuckoo = CuckooSandbox(base_url=cuckoo_url, api_token=cuckoo_api_token)
 
     def analyze_single(self, file_path: str, use_sandbox: bool = False) -> Dict:
         """
@@ -49,26 +46,6 @@ class ProteusAnalyzer:
         # Add extracted files info if it's an archive
         if "extracted_files" in result:
             analysis["extracted_files"] = result["extracted_files"]
-
-        # Perform sandbox analysis if enabled and requested
-        if use_sandbox and self.cuckoo_enabled and self.cuckoo:
-            try:
-                sandbox_result = self.cuckoo.quick_scan(file_path)
-                if sandbox_result:
-                    analysis["sandbox"] = sandbox_result
-                    # Adjust threat score based on sandbox findings
-                    sandbox_score = sandbox_result.get("score", 0.0)
-                    if sandbox_score > 5.0:
-                        # Boost score if sandbox detected malicious behavior
-                        analysis["score"] = min(
-                            100.0, analysis["score"] + (sandbox_score * 0.3)
-                        )
-                        # Update verdict if sandbox score is high
-                        if sandbox_score > 7.0:
-                            analysis["verdict"] = "MALICIOUS"
-            except Exception as e:
-                print(f"[!] Sandbox analysis failed: {e}")
-                analysis["sandbox"] = {"error": str(e)}
 
         return analysis
 

@@ -97,40 +97,74 @@
 </head>
 <body>
     <div id="app" class="min-h-screen flex flex-col">
-        <!-- Navigation -->
-        <nav class="glass sticky top-0 z-50 border-b border-slate-800/50">
-            <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                <div class="flex items-center gap-3 cursor-pointer" @click="currentView = 'dashboard'">
-                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <i data-lucide="shield" class="w-5 h-5 text-white"></i>
+        <!-- Login View -->
+        <transition name="fade" mode="out-in">
+            <div v-if="!isAuthenticated" key="login" class="flex-1 flex items-center justify-center p-6">
+                <div class="glass rounded-xl p-8 w-full max-w-md">
+                    <div class="flex flex-col items-center mb-8">
+                        <h1 class="text-2xl font-bold tracking-tight">PROTEUS</h1>
+                        <p class="text-slate-400 text-sm">Advanced Static Analysis Engine</p>
                     </div>
-                    <span class="text-xl font-bold tracking-tight">PROTEUS</span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">v0.3.0</span>
-                </div>
 
-                <div class="flex items-center gap-1 bg-slate-800/50 p-1 rounded-lg border border-slate-700/50">
-                    <button 
-                        v-for="view in ['dashboard', 'analyze', 'history']" 
-                        :key="view"
-                        @click="currentView = view"
-                        :class="['px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize', 
-                                currentView === view ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-white']"
-                    >
-                        {{ view }}
-                    </button>
-                </div>
+                    <form @submit.prevent="handleLogin" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Username</label>
+                            <input type="text" v-model="login.username" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" placeholder="Enter username" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Password</label>
+                            <input type="password" v-model="login.password" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" placeholder="••••••••" required>
+                        </div>
+                        
+                        <div v-if="login.error" class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center">
+                            {{ login.error }}
+                        </div>
 
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50 border border-slate-700/50">
-                        <div :class="['w-2 h-2 rounded-full animate-pulse', serverStatus ? 'bg-green-500' : 'bg-red-500']"></div>
-                        <span class="text-xs font-medium text-slate-400">{{ serverStatus ? 'System Online' : 'System Offline' }}</span>
-                    </div>
+                        <button type="submit" :disabled="login.loading" class="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center gap-2">
+                            <div v-if="login.loading" class="loader w-4 h-4"></div>
+                            {{ login.loading ? 'Authenticating...' : 'Sign In' }}
+                        </button>
+                    </form>
                 </div>
             </div>
-        </nav>
 
-        <!-- Main Content -->
-        <main class="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
+            <div v-else key="main" class="flex-1 flex flex-col">
+                <!-- Main App -->
+                <!-- Navigation -->
+                <nav class="glass sticky top-0 z-50 border-b border-slate-800/50">
+                    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                        <div class="flex items-center gap-3 cursor-pointer" @click="currentView = 'dashboard'">
+                            <span class="text-xl font-bold tracking-tight">PROTEUS</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700"></span>
+                        </div>
+
+                        <div class="flex items-center gap-1 bg-slate-800/50 p-1 rounded-lg border border-slate-700/50">
+                            <button 
+                                v-for="view in ['dashboard', 'analyze', 'history']" 
+                                :key="view"
+                                @click="currentView = view"
+                                :class="['px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize', 
+                                        currentView === view ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-white']"
+                            >
+                                {{ view }}
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50 border border-slate-700/50">
+                                <div :class="['w-2 h-2 rounded-full animate-pulse', serverStatus ? 'bg-green-500' : 'bg-red-500']"></div>
+                                <span class="text-xs font-medium text-slate-400">{{ serverStatus ? 'System Online' : 'System Offline' }}</span>
+                            </div>
+                            <button @click="logout" class="text-slate-400 hover:text-white transition-colors" title="Logout">
+                                <i data-lucide="log-out" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+
+                <!-- Main Content -->
+                <main class="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
+
             
             <!-- Dashboard View -->
             <transition name="fade" mode="out-in">
@@ -379,13 +413,65 @@
             </transition>
 
             <!-- History View (Simplified) -->
-            <div v-if="currentView === 'history'" key="history" class="glass rounded-xl p-6">
-                <h2 class="text-xl font-bold mb-6">Analysis History</h2>
-                <p class="text-slate-500">History view populated from local storage.</p>
-                <!-- Reuse the table from dashboard or make a more detailed one -->
-            </div>
+            <transition name="fade" mode="out-in">
+                <div v-if="currentView === 'history'" key="history" class="glass rounded-xl p-6">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="history" class="w-6 h-6 text-slate-400"></i>
+                        Analysis History
+                    </h2>
+                    
+                    <div v-if="scanHistory.length === 0" class="text-center py-12 text-slate-500">
+                        No analysis history available.
+                    </div>
+                    <div v-else class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="border-b border-slate-700/50 text-slate-400 uppercase text-xs">
+                                <tr>
+                                    <th class="pb-3 pl-2">Time</th>
+                                    <th class="pb-3">Filename</th>
+                                    <th class="pb-3">Verdict</th>
+                                    <th class="pb-3">Threat Score</th>
+                                    <th class="pb-3">Packer</th>
+                                    <th class="pb-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/50">
+                                <tr v-for="scan in scanHistory" :key="scan.id" class="group hover:bg-slate-800/30 transition-colors">
+                                    <td class="py-3 pl-2 text-slate-400 font-mono">{{ formatDate(scan.timestamp) }}</td>
+                                    <td class="py-3 font-medium text-slate-200">{{ scan.filename }}</td>
+                                    <td class="py-3">
+                                        <span :class="['px-2 py-1 rounded text-xs font-bold', 
+                                            scan.result.static?.verdict === 'MALICIOUS' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 
+                                            'bg-green-500/10 text-green-400 border border-green-500/20']">
+                                            {{ scan.result.static?.verdict || 'UNKNOWN' }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                                <div class="h-full rounded-full" 
+                                                    :class="getScoreColor(scan.result.static?.threat_score)"
+                                                    :style="{width: (scan.result.static?.threat_score || 0) + '%'}"></div>
+                                            </div>
+                                            <span class="font-mono text-xs">{{ scan.result.static?.threat_score?.toFixed(1) || 0 }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 text-slate-400">
+                                        {{ scan.result.static?.packer?.detected ? scan.result.static.packer.name : '-' }}
+                                    </td>
+                                    <td class="py-3">
+                                        <button @click="viewReport(scan)" class="text-blue-400 hover:text-blue-300 text-xs font-medium">View Report</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </transition>
 
-        </main>
+                </main>
+            </div>
+        </transition>
     </div>
 
     <script>
@@ -398,6 +484,10 @@
                 const serverStatus = ref(false);
                 const scanHistory = ref([]);
                 
+                // Auth state
+                const isAuthenticated = ref(false);
+                const login = ref({ username: '', password: '', loading: false, error: '' });
+
                 // Upload logic
                 const dragOver = ref(false);
                 const selectedFile = ref(null);
@@ -412,12 +502,18 @@
 
                 // Lifecycle
                 onMounted(async () => {
-                    await checkHealth();
-                    loadHistory();
+                    const token = localStorage.getItem('proteus_token');
+                    if (token) {
+                        isAuthenticated.value = true;
+                        await checkHealth();
+                        loadHistory();
+                    }
                     lucide.createIcons();
                     
                     // Poll stats every 30s
-                    setInterval(checkHealth, 30000);
+                    setInterval(() => {
+                        if (isAuthenticated.value) checkHealth();
+                    }, 30000);
                 });
 
                 watch(currentView, () => {
@@ -425,9 +521,56 @@
                 });
 
                 // Methods
+                async function handleLogin() {
+                    login.value.loading = true;
+                    login.value.error = '';
+                    
+                    try {
+                        const formData = new URLSearchParams();
+                        formData.append('username', login.value.username);
+                        formData.append('password', login.value.password);
+
+                        const res = await fetch('/token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: formData
+                        });
+
+                        if (!res.ok) throw new Error('Invalid credentials');
+                        
+                        const data = await res.json();
+                        localStorage.setItem('proteus_token', data.access_token);
+                        isAuthenticated.value = true;
+                        await checkHealth();
+                        loadHistory();
+                        
+                    } catch (e) {
+                        login.value.error = e.message;
+                    } finally {
+                        login.value.loading = false;
+                    }
+                }
+
+                function logout() {
+                    localStorage.removeItem('proteus_token');
+                    isAuthenticated.value = false;
+                    scanHistory.value = [];
+                    login.value.username = '';
+                    login.value.password = '';
+                }
+
                 async function checkHealth() {
                     try {
-                        const res = await fetch('/api/stats');
+                        const token = localStorage.getItem('proteus_token');
+                        const res = await fetch('/api/stats', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        
+                        if (res.status === 401) {
+                            logout();
+                            return;
+                        }
+
                         if (res.ok) {
                             stats.value = await res.json();
                             serverStatus.value = true;
@@ -472,12 +615,22 @@
                     formData.append('yara', options.value.yara);
                     formData.append('strings', options.value.strings);
                     formData.append('sandbox', options.value.sandbox);
+                    
+                    // Add token manually for upload
+                    const token = localStorage.getItem('proteus_token');
+                    formData.append('token', token);
 
                     try {
                         const res = await fetch('/api/scan', {
                             method: 'POST',
                             body: formData
+                            // No Authorization header needed as we pass token in form data
                         });
+                        
+                        if (res.status === 401) {
+                            logout();
+                            throw new Error('Session expired');
+                        }
                         
                         if (!res.ok) throw new Error(`Analysis failed: ${res.statusText}`);
                         
@@ -532,6 +685,10 @@
                 }
 
                 return {
+                    isAuthenticated,
+                    login,
+                    handleLogin,
+                    logout,
                     currentView,
                     stats,
                     serverStatus,

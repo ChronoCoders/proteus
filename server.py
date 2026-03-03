@@ -10,10 +10,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from datetime import datetime, timedelta
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from pydantic import BaseModel
 import uvicorn
 
 # Import Proteus modules
@@ -22,6 +27,71 @@ from python.ml_detector import ProteusMLDetector
 from python.yara_engine import ProteusYaraEngine
 from python.config import ConfigManager
 import proteus
+
+# Security Config
+SECRET_KEY = "proteus_secret_key_change_in_production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Using plain bcrypt instead of passlib for simplicity in this environment
+# passlib was causing backend issues on Windows with certain python versions
+import bcrypt
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+# Hardcoded user for MVP
+# Pre-calculated hash for "talber1726"
+# Generated using: bcrypt.hashpw(b"talber1726", bcrypt.gensalt()).decode()
+USERS_DB = {
+    "Chronocoder": {
+        "username": "Chronocoder",
+        "password_hash": "$2b$12$v.9Ht2cVH82RKGqCwA7ARuvm2IAmzwH7MaQj8LUIyR01MkMYrT4Ki"
+    }
+}
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+def verify_password(plain_password, hashed_password):
+    # Verify using direct bcrypt
+    try:
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception as e:
+        print(f"Auth error: {e}")
+        return False
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user = USERS_DB.get(token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
 
 # Global analyzers
 ml_detector: Optional[ProteusMLDetector] = None
@@ -98,9 +168,23 @@ async def root():
     """Serve the main web interface."""
     return FileResponse("web/index.html")
 
+@app.post("/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = USERS_DB.get(form_data.username)
+    if not user or not verify_password(form_data.password, user["password_hash"]):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user["username"]}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/api/stats")
-async def get_stats():
+async def get_stats(current_user: dict = Depends(get_current_user)):
     """Get system statistics."""
     stats = {
         "ml_loaded": ml_detector is not None,
@@ -120,7 +204,7 @@ async def process_dynamic_analysis(file_path: Path, task_id: str):
     pass
 
 @app.get("/api/report/{task_id}")
-async def get_report(task_id: str):
+async def get_report(task_id: str, current_user: dict = Depends(get_current_user)):
     """Retrieve dynamic analysis report."""
     # Find report by task ID (filename prefix)
     # The sandbox runner saves reports as {filename}.json
@@ -144,12 +228,16 @@ async def scan_file(
     strings: str = Form("false"),
     sandbox: str = Form("false"),
     background_tasks: BackgroundTasks = BackgroundTasks(),
+    token: str = Form(...), # Pass token manually for file upload form
 ):
     """
     Scan an uploaded file.
 
     Handles antivirus interference by using temporary quarantine-free directories.
     """
+    # Manual token validation for multipart/form-data
+    await get_current_user(token)
+
     temp_dir = None
     temp_file = None
 

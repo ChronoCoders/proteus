@@ -9,6 +9,7 @@ Cargo.lock
 
 # Python
 /venv
+.venv/
 *.pyc
 __pycache__/
 *.pyo
